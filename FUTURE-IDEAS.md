@@ -7,7 +7,7 @@ app
     détection de doublons meme si nom ou infos différentes
     avoir une notion de source (images deja triées pour reconnaissance faiclae notamment) et d'inputs (images àt rier)
 cicd
-    avoir unr ésultat tyhpe attendu en sortie basé sur les samples et le mettre ent ant que test E2E dans pipeline
+    avoir un résultat type attendu en sortie basé sur les samples et le mettre en tant que test E2E dans pipeline
         utilsier "jq" pour ca ?
     dependabot sur les dépendances
     mettre dans un cache les différents execs durant builds si pas de changement
