@@ -1,0 +1,81 @@
+Test sample images — sources and usage rights
+===============================================
+
+These files are for local testing of Filter_scripts/group_photos_by_date.py
+only. They are NOT original content of this repository. See below for the
+source and license of each file before any redistribution.
+
+Downloaded: 2026-09-02
+
+
+1) Canon_40D.jpg
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/jpg/Canon_40D.jpg
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+   Original photo: Wikimedia Commons, "Iguana_iguana_male_head.jpg"
+   License: Attribution-ShareAlike 4.0 International (CC BY-SA 4.0), per
+     exif-py tests/resources/README.rst ("User-contributed images will be
+     released under the Attribution-ShareAlike 4.0 International license.")
+   Contains real EXIF DateTimeOriginal (2008:07:31 10:38:11).
+
+2) Nikon_D70.jpe
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/jpg/Nikon_D70.jpg
+     (downloaded and renamed .jpg -> .jpe to test that extension; same bytes/format)
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+   Original photo: Wikimedia Commons, "Anolis_carolinensis_brown.jpg"
+   License: CC BY-SA 4.0, per exif-py tests/resources/README.rst
+   Contains real EXIF DateTimeOriginal (2008:07:31 10:03:44).
+
+3) Arbitro.tiff
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/tiff/Arbitro.tiff
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+   License: Wikimedia Commons image, per exif-py tests/resources/README.rst
+     ("all images come from Wikipedia Commons")
+   Contains EXIF metadata (TIFF tags).
+
+4) samplefilehub.heif
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/heic/samplefilehub.heif
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+   License: CC BY-SA 4.0, per exif-py tests/resources/README.rst
+
+5) spring_1440x960.heic
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/heic/spring_1440x960.heic
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+   License: CC BY-SA 4.0, per exif-py tests/resources/README.rst
+   Note: upstream commit message flags this file as a known tricky/edge-case
+     HEIC for EXIF parsing — useful as a stress test, may not yield a
+     DateTimeOriginal.
+
+6) file_example_PNG_500kB.png
+   Source: https://file-examples.com/storage/fe8911b09d6a9815d9ccb00/2017/10/file_example_PNG_500kB.png
+   Origin: file-examples.com sample image library
+     (https://file-examples.com/index.php/sample-images-download/)
+   License: Site states files are provided free for testing/demo purposes.
+   No EXIF DateTimeOriginal (exercises the "no_exif" bucket).
+
+7) file_example_GIF_500kB.gif
+   Source: https://file-examples.com/storage/fe8911b09d6a9815d9ccb00/2017/10/file_example_GIF_500kB.gif
+   Origin: file-examples.com sample image library
+   License: Site states files are provided free for testing/demo purposes.
+   No EXIF DateTimeOriginal (exercises the "no_exif" bucket).
+
+8) file_example_WEBP_50kB.webp
+   Source: https://file-examples.com/storage/fe8911b09d6a9815d9ccb00/2020/03/file_example_WEBP_50kB.webp
+   Origin: file-examples.com sample image library
+   License: Site states files are provided free for testing/demo purposes.
+   No EXIF DateTimeOriginal (exercises the "no_exif" bucket).
+
+9) sample_640x426.bmp
+   Source: https://filesamples.com/samples/image/bmp/sample_640%C3%97426.bmp
+   Origin: filesamples.com sample file library
+     (https://filesamples.com/formats/bmp)
+   License: Site states files are provided free for download/testing purposes.
+   No EXIF DateTimeOriginal (exercises the "no_exif" bucket).
+
+
+Coverage notes
+--------------
+- All 11 extensions from Filter_scripts/README.md are represented:
+  .jpg, .jpeg (Canon_40D.jpg IS a .jpg; no separate .jpeg sample included),
+  .jpe, .tif/.tiff, .png, .gif, .bmp, .webp, .heic, .heif.
+- Files 1-5 carry real embedded EXIF data (dates for grouping); files 6-9
+  have none, to exercise the no_exif fallback path.
