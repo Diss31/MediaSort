@@ -4,11 +4,11 @@ Scripts for filtering/organizing photos before they get sorted into the final li
 
 ## group_photos_by_date.py
 
-Recursively scans a folder tree for photos and groups them by the date they were
-**actually taken** (EXIF `DateTimeOriginal`), not by file mtime/ctime.
+Recursively scans a folder tree for photos and groups them by date.
 
-Photos without a readable EXIF capture date are listed separately under `no_exif`,
-ordered by file mtime (best-effort, since it's all we have).
+Files are grouped under `capture_time` when their real EXIF `DateTimeOriginal`
+is readable. Everything else (no EXIF tag, or a format exifread can't parse at
+all, e.g. PNG, HEIC) falls back to `last_modified`, grouped by file mtime instead.
 
 ### Requirements
 
@@ -27,25 +27,27 @@ python group_photos_by_date.py <root> [-o OUTPUT]
 ```
 
 - `root` — folder to scan recursively for photos.
-- `-o`, `--output` — path to the output JSON report (default: `photos_by_date.json`).
+- `-o`, `--output` — path to the output JSON report (default: `photos_by_date.json`). A warning is printed if this file already exists, since it will be overwritten.
 
 ### Output format
 
 ```json
 {
-  "by_date": {
+  "capture_time": {
     "2024-06-01": ["path/to/photo1.jpg", "path/to/photo2.jpg"],
     "2024-06-02": ["path/to/photo3.jpg"]
   },
-  "no_exif": [
-    { "path": "path/to/unknown.jpg", "mtime": "2024-06-03T10:15:00" }
-  ]
+  "last_modified": {
+    "2024-06-03": ["path/to/unknown.jpg", "path/to/photo.heic"]
+  }
 }
 ```
 
-- `by_date` — capture date (`YYYY-MM-DD`) → sorted list of file paths.
-- `no_exif` — files with no readable EXIF date, each with its file mtime, sorted oldest first.
+- `capture_time` — capture date (`YYYY-MM-DD`) → sorted list of file paths, from EXIF `DateTimeOriginal`.
+- `last_modified` — mtime date (`YYYY-MM-DD`) → list of file paths ordered by mtime within each day, for files with no readable EXIF date or an unsupported format.
 
 ### Supported extensions
 
-`.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`, `.png`, `.gif`, `.bmp`, `.webp`, `.heic`, `.heif`
+Scanned: `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`, `.png`, `.gif`, `.bmp`, `.webp`, `.heic`, `.heif`
+
+EXIF-capable (used for `capture_time`): `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`. Everything else scanned falls back to `last_modified`.

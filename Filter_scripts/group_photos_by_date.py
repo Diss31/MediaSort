@@ -1,9 +1,9 @@
 """
-Recursively scans a folder tree for photos and groups them by the date they
-were actually taken (EXIF DateTimeOriginal), not by file mtime/ctime.
+Recursively scans a folder tree for photos and groups them by date.
 
-Photos without a readable EXIF capture date are listed separately under
-"no_exif", ordered by file mtime (best-effort, since it's all we have).
+Files are grouped under "capture_time" when their real EXIF DateTimeOriginal
+is readable. Everything else (no EXIF tag, or a format exifread can't parse
+at all) falls back to "last_modified", grouped by file mtime instead.
 
 See requirements.txt for dependencies.
 """
@@ -11,12 +11,15 @@ See requirements.txt for dependencies.
 import argparse
 import json
 import os
+import sys
 from datetime import datetime
 
 import exifread
 
-IMAGE_EXTENSIONS = {
-    ".jpg", ".jpeg", ".jpe", ".tif", ".tiff",
+# Formats exifread can actually parse EXIF from.
+EXIF_CAPABLE_EXTENSIONS = {".jpg", ".jpeg", ".jpe", ".tif", ".tiff"}
+
+IMAGE_EXTENSIONS = EXIF_CAPABLE_EXTENSIONS | {
     ".png", ".gif", ".bmp", ".webp", ".heic", ".heif",
 }
 
@@ -50,35 +53,38 @@ def read_capture_date(path):
 
 
 def group_photos(root):
-    by_date = {}
-    no_exif = []
+    capture_time = {}
+    last_modified = {}
 
     for path in find_images(root):
-        capture_date = read_capture_date(path)
+        ext = os.path.splitext(path)[1].lower()
+        capture_date = read_capture_date(path) if ext in EXIF_CAPABLE_EXTENSIONS else None
+
         if capture_date is not None:
             key = capture_date.date().isoformat()
-            by_date.setdefault(key, []).append(path)
+            capture_time.setdefault(key, []).append(path)
         else:
             mtime = os.path.getmtime(path)
-            no_exif.append((path, mtime))
+            key = datetime.fromtimestamp(mtime).date().isoformat()
+            last_modified.setdefault(key, []).append((path, mtime))
 
-    for paths in by_date.values():
+    for paths in capture_time.values():
         paths.sort()
-    no_exif.sort(key=lambda entry: entry[1])
+    for entries in last_modified.values():
+        entries.sort(key=lambda entry: entry[1])
 
-    return by_date, no_exif
+    return capture_time, last_modified
 
 
-def build_report(by_date, no_exif):
+def build_report(capture_time, last_modified):
     return {
-        "by_date": {date: sorted(paths) for date, paths in sorted(by_date.items())},
-        "no_exif": [
-            {
-                "path": path,
-                "mtime": datetime.fromtimestamp(mtime).isoformat(),
-            }
-            for path, mtime in no_exif
-        ],
+        "capture_time": {
+            date: sorted(paths) for date, paths in sorted(capture_time.items())
+        },
+        "last_modified": {
+            date: [path for path, _mtime in entries]
+            for date, entries in sorted(last_modified.items())
+        },
     }
 
 
@@ -94,14 +100,21 @@ def main():
     )
     args = parser.parse_args()
 
-    by_date, no_exif = group_photos(args.root)
-    report = build_report(by_date, no_exif)
+    capture_time, last_modified = group_photos(args.root)
+    report = build_report(capture_time, last_modified)
+
+    if os.path.exists(args.output):
+        print(f"Warning: {args.output} already exists and will be overwritten.", file=sys.stderr)
 
     with open(args.output, "w", encoding="utf-8") as f:
         json.dump(report, f, indent=2, ensure_ascii=False)
 
-    total = sum(len(paths) for paths in by_date.values()) + len(no_exif)
-    print(f"Scanned {total} image(s): {len(by_date)} date group(s), {len(no_exif)} without EXIF date.")
+    capture_count = sum(len(paths) for paths in capture_time.values())
+    modified_count = sum(len(paths) for paths in last_modified.values())
+    print(
+        f"Scanned {capture_count + modified_count} image(s): "
+        f"{capture_count} with capture time, {modified_count} falling back to last modified."
+    )
     print(f"Report written to {args.output}")
 
 
