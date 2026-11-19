@@ -29,24 +29,16 @@ Proceed without asking for purely mechanical work that has no real tradeoff:
 
 ## Explaining, not just doing
 
-Since the point is learning: explain *why* each option works the way it does
-(tradeoffs, edge cases, common pitfalls) rather than only stating what to do.
-Keep explanations concise — this is a project preference, not license to write
-long essays for trivial choices.
+Since the point is learning: when presenting options, explain *why* each works
+(tradeoffs, edge cases, common pitfalls), not only what to do. Keep it concise —
+no essays for trivial choices.
 
 ## External tools
 
-When a task calls for a tool that is not already available in the environment or
-the project (not installed, not a project dependency — e.g. downloading a linter
-binary, `pip install`/`npm install`-ing something just for a check), tell the user
-before using it:
-- what the tool is, in one or two sentences;
-- why it is needed for the task at hand;
-- how it is obtained and whether anything is left behind (temporary download
-  vs. a change to the project's dependencies or tooling).
-
-Adding a tool to the project permanently (dependency, pre-commit hook, CI step)
-is a tooling choice and falls under the core rule above.
+The global rule applies: announce any tool not already in the environment or
+project before using it (what it is, why needed, what it leaves behind).
+Repo-specific addition: adding a tool *permanently* (dependency, pre-commit
+hook, CI step) is a tooling choice and falls under the core rule above.
 
 ## Escape hatch
 
