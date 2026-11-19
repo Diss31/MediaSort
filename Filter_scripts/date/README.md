@@ -1,6 +1,6 @@
-# Filter_scripts
+# Date filter
 
-Scripts for filtering/organizing photos before they get sorted into the final library.
+Groups photos by date, ahead of sorting them into the final library.
 
 ## group_photos_by_date.py
 

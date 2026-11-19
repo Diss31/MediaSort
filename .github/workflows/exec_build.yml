@@ -17,15 +17,15 @@ jobs:
           python-version: "3.12"
           cache: 'pip'
           cache-dependency-path: |
-            Filter_scripts/requirements.txt
-            Filter_scripts/requirements-dev.txt
+            Filter_scripts/date/requirements.txt
+            Filter_scripts/date/requirements-dev.txt
       - name: Build date executable
         run: |
-          cd Filter_scripts/
+          cd Filter_scripts/date/
           pip install -r requirements.txt -r requirements-dev.txt
           pyinstaller --onefile group_photos_by_date.py
       - name: Upload date executable
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: date_executable
-          path: Filter_scripts/dist/group_photos_by_date.exe
+          path: Filter_scripts/date/dist/group_photos_by_date.exe
