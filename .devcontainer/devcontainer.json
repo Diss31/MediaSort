@@ -1,0 +1,13 @@
+{
+	"name": "MediaSort",
+	// Debian + Python 3.12/pip, git, zsh+Oh My Zsh, non-root "vscode" user w/ sudo, pipx, nvm (no Node installed by default).
+	// See https://github.com/devcontainers/images/tree/main/src/python for full image contents.
+	"image": "mcr.microsoft.com/devcontainers/python:3.12",
+	"postCreateCommand": "pip install -r Filter_scripts/date/requirements.txt -r Filter_scripts/date/requirements-dev.txt -r Filter_scripts/geo/requirements.txt -r Filter_scripts/geo/requirements-dev.txt",
+	"remoteUser": "vscode",
+	// Volume nomme persistant : la couche writable du conteneur est perdue a chaque rebuild,
+  // ce qui effacerait l'historique de session VS Code/Copilot sans ce mount.
+	"mounts": [
+		"source=zone56-vscode-server-MediaSort,target=/home/vscode/.vscode-server,type=volume"
+	]
+}
