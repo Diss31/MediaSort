@@ -18,6 +18,7 @@ geo = []
 exe = ["pyinstaller>=6.0"]
 
 [project.scripts]
+mediasort = "mediasort.cli:main"
 mediasort-date = "mediasort.filters.date:main"
 mediasort-geo = "mediasort.filters.geo:main"
 

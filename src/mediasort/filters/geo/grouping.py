@@ -188,14 +188,18 @@ def main():
     clusters, no_location = group_photos(args.root, args.threshold)
     report = build_report(clusters, no_location)
     write_report(report, args.output)
+    summarize(clusters, no_location, args.output)
 
+
+def summarize(clusters, no_location, output_path):
+    """Prints the scan counts and where the report was written."""
     located_count = sum(len(paths) for paths in clusters)
     print(
         f"Scanned {located_count + len(no_location)} image(s): "
         f"{located_count} with GPS grouped into {len(clusters)} location(s), "
         f"{len(no_location)} without usable GPS."
     )
-    print(f"Report written to {args.output}")
+    print(f"Report written to {output_path}")
 
 
 if __name__ == "__main__":

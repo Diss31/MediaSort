@@ -9,8 +9,8 @@ by the repo owner rather than picked automatically (see
 ## Structure
 
 Filters that process photos ahead of sorting them into the final library. Every
-filter ships both as a standalone executable and as a container image, and keeps
-its own README next to its code:
+filter ships as a container image, and all filters ship together as one
+standalone executable. Each filter keeps its own README next to its code:
 
 - [src/mediasort/filters/date/](src/mediasort/filters/date/README.md) — groups photos by date.
 - [src/mediasort/filters/geo/](src/mediasort/filters/geo/README.md) — groups photos by GPS location.
@@ -30,7 +30,14 @@ dependency tool used here:
 uv sync
 ```
 
-Then run a filter:
+Then run every filter at once (writes both reports to the current folder, or
+`-o <folder>`):
+
+```
+uv run mediasort <folder>
+```
+
+or a single filter:
 
 ```
 uv run mediasort-date <folder>
@@ -43,11 +50,11 @@ local Windows install.
 
 ## Building
 
-Standalone executables:
+Standalone executable (runs every filter):
 
 ```
 uv sync --extra exe
-uv run pyinstaller --onefile --name group_photos_by_date entrypoints/date_entry.py
+uv run pyinstaller --onefile --name mediasort entrypoints/mediasort_entry.py
 ```
 
 Container images:

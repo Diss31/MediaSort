@@ -77,21 +77,6 @@ Photos whose GPS tags are present but unusable — malformed values, or an all-z
 
 ### Building a Windows executable
 
-Install the packaging tool via the `exe` extra, then build a single-file `.exe`
-from the entry point shim:
-
-```
-uv sync --extra exe
-uv run pyinstaller --onefile --name group_photos_by_location entrypoints/geo_entry.py
-```
-
-Both commands run from the repository root. PyInstaller analyses a script file
-and ignores `[project.scripts]`, which is why it is pointed at the two-line shim
-in [`entrypoints/`](../../../../entrypoints) rather than at the package.
-
-The executable is written to `dist/group_photos_by_location.exe`. The `build/` folder
-and the generated `.spec` file are build artifacts and are gitignored; delete them
-freely and rerun the command above to rebuild.
-
-PyInstaller doesn't cross-compile: the `.exe` only runs on the same OS/architecture
-it was built on.
+The geo filter has no executable of its own: it is part of the combined
+`mediasort.exe`, which always runs every filter. See
+[docs/build.md](../../../../docs/build.md#windows-executable).

@@ -87,14 +87,18 @@ def main():
     capture_time, last_modified = group_photos(args.root)
     report = build_report(capture_time, last_modified)
     write_report(report, args.output)
+    summarize(capture_time, last_modified, args.output)
 
+
+def summarize(capture_time, last_modified, output_path):
+    """Prints the scan counts and where the report was written."""
     capture_count = sum(len(paths) for paths in capture_time.values())
     modified_count = sum(len(paths) for paths in last_modified.values())
     print(
         f"Scanned {capture_count + modified_count} image(s): "
         f"{capture_count} with capture time, {modified_count} falling back to last modified."
     )
-    print(f"Report written to {args.output}")
+    print(f"Report written to {output_path}")
 
 
 if __name__ == "__main__":

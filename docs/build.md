@@ -44,27 +44,25 @@ anything runs.
 
 ## The two build tracks
 
-Both tracks ship **every** filter; they differ only in packaging form, not in
-capability:
+Both tracks ship **every** filter; they differ in packaging form and in how the
+filters are grouped:
 
-| | Windows executables | Container images |
+| | Windows executable | Container images |
 | --- | --- | --- |
-| Artifact | one standalone `.exe` per filter | one image per filter |
-| | `group_photos_by_date.exe`, `group_photos_by_location.exe` | `mediasort-date`, `mediasort-geo` |
-| Purpose | the actual personal tool, run on a Windows desktop | running the same filters on Kubernetes |
+| Artifact | **one** standalone `.exe` running every filter | one image per filter |
+| | `mediasort.exe` | `mediasort-date`, `mediasort-geo` |
+| Purpose | the actual personal tool, run on a Windows desktop | running the same filters on Kubernetes, one pod per filter |
 | Built by | [exec_build.yml](../.github/workflows/exec_build.yml) on `windows-2025` | [image_build.yml](../.github/workflows/image_build.yml) on Linux |
 | Installs | `uv sync --extra exe` | `uv sync --extra <filter>` |
 | Includes PyInstaller | yes | **never** |
 
-Anything that becomes a filter or a standalone utility — including the planned
-tool that merges the filters' JSON outputs — is expected to gain both an
-executable and an image. Adding one means adding an extra, an entry point, a
-shim, and a thin Dockerfile; nothing about the structure changes.
+The split differs on purpose: on a desktop, one tool that always produces every
+report is simplest to use, while on Kubernetes each filter staying its own image
+is what allows one pod per filter.
 
-> **Known gap:** [exec_build.yml](../.github/workflows/exec_build.yml) currently
-> builds only the date executable. That is unfinished CI, not a design boundary —
-> every filter is buildable as an executable today, and the geo command below
-> works locally right now.
+Adding a filter therefore means adding an extra, a thin Dockerfile, a
+per-filter console script for its image, and one entry in the combined CLI
+([cli.py](../src/mediasort/cli.py)); nothing about the structure changes.
 
 Which part of [pyproject.toml](../pyproject.toml) feeds which track:
 
@@ -77,7 +75,7 @@ Which part of [pyproject.toml](../pyproject.toml) feeds which track:
 **Invariant: PyInstaller never enters a container image.** It is a packaging tool
 for the executable channel, useless at runtime, and the `exe` extra exists to keep
 it out. [image_build.yml](../.github/workflows/image_build.yml) asserts this on
-every build rather than trusting it.
+every published filter image rather than trusting it.
 
 The extra is deliberately named for the distribution *channel* and not for an
 operating system: PyInstaller also runs in the Linux devcontainer to produce the
@@ -85,20 +83,34 @@ smoke-test binary, so `windows` would be inaccurate. When linters and tests
 arrive they belong in a separate `dev` extra, so that the executable build never
 installs them and a lint job never installs PyInstaller.
 
-## Windows executables
+## Windows executable
 
-One executable per filter. PyInstaller analyses a *script* and ignores
-`[project.scripts]`, so it is pointed at a two-line shim in
-[entrypoints/](../entrypoints) that imports the real entry point from the
-installed package:
+A single executable, `mediasort.exe`, that runs every filter on a folder, one
+after the other, and always writes every report. There is deliberately no way to
+run only one filter from it:
+
+```
+mediasort.exe <folder> [-o <output folder>] [-t <metres>]
+```
+
+- `-o`: folder the reports go to (default: the current folder, created if
+  missing), as `photos_by_date.json` and `photos_by_location.json`.
+- `-t`: the geo filter's distance threshold, defaulting to the geo filter's own.
+- If one filter fails, the others still run; the error is reported on stderr and
+  the process exits non-zero.
+
+It is built from [cli.py](../src/mediasort/cli.py), which calls each filter's
+functions directly rather than its `main()`, since every filter `main()` parses
+its own command line.
+
+PyInstaller analyses a *script* and ignores `[project.scripts]`, so it is pointed
+at a two-line shim in [entrypoints/](../entrypoints) that imports the real entry
+point from the installed package:
 
 ```
 uv sync --extra exe
-uv run pyinstaller --onefile --name group_photos_by_date     entrypoints/date_entry.py
-uv run pyinstaller --onefile --name group_photos_by_location entrypoints/geo_entry.py
+uv run pyinstaller --onefile --name mediasort entrypoints/mediasort_entry.py
 ```
-
-`--name` keeps each artifact's filename independent of its shim's filename.
 
 The project must be installed before PyInstaller runs, or `mediasort` is not
 importable — with src-layout this is enforced rather than merely recommended.
