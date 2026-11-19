@@ -123,6 +123,20 @@ dependency layer a cache hit and only the cheap top layer rebuilds, instead of
 reinstalling every dependency on each source change. Negligible with `exifread`
 alone — decisive once a filter pulls in something the size of OpenCV.
 
+The same rule applies inside each filter image, which installs in two steps
+around the `COPY src/`:
+
+| Layer | Contents | Rebuilt when |
+|---|---|---|
+| base | shared dependencies | `pyproject.toml` / `uv.lock` change |
+| child `RUN uv sync --extra <filter> --no-install-project` | that filter's extra dependencies | `pyproject.toml` / `uv.lock` change |
+| child `COPY src/` + `RUN uv sync --extra <filter>` | `mediasort` itself | any source change |
+
+Installing the extra *before* copying the source is what keeps a filter's heavy
+dependencies cached across code edits. Reversing the order would reinstall them
+on every edit — including edits to `mediasort.common`, which touch every image at
+once.
+
 That split is also why `uv` is used rather than pip: `uv sync --no-install-project`
 installs the resolved dependencies *without* building the project, which plain
 `pip install .` cannot express. A second reason is the lockfile — `uv.lock` is
@@ -133,10 +147,11 @@ produce reports that disagree.
 
 Known characteristic: the per-filter images `COPY src/` wholesale, so editing one
 filter rebuilds the *thin* layer of every image — roughly 8 MB of layer churn per
-unrelated edit. The expensive dependency layer still stays cached.
+unrelated edit. The expensive dependency layers still stay cached.
 
 Copying only one filter's folder instead does work, but needs the package
-skeleton copied too (`mediasort/__init__.py`, `filters/__init__.py`), and leaves
+skeleton and `common/` copied too (`mediasort/__init__.py`, `filters/__init__.py`,
+`mediasort/common/`), and leaves
 each image shipping a broken console script for every *other* filter, because
 `[project.scripts]` declares them all and installing generates them all. Fixing
 that properly means per-filter package metadata — a separate distribution per
