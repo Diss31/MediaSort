@@ -2,7 +2,10 @@
 	"name": "MediaSort",
 	// Debian + Python 3.12/pip, git, zsh+Oh My Zsh, non-root "vscode" user w/ sudo, pipx, nvm (no Node installed by default).
 	// See https://github.com/devcontainers/images/tree/main/src/python for full image contents.
-	"image": "mcr.microsoft.com/devcontainers/python:3.12",
+	// Built (not pulled directly) so corporate proxy CAs can be baked in — see Dockerfile.
+	"build": {
+		"dockerfile": "Dockerfile"
+	},
 	// uv is the single dependency toolchain across the devcontainer, the Dockerfiles
 	// and the Windows executable build. src-layout means imports only resolve after
 	// a real install, so `uv sync` has to run before anything else works.

@@ -1,3 +1,6 @@
+# Corporate proxy CA certs baked into the devcontainer image (see README)
+.devcontainer/*.crt
+
 # Report files
 photos_by_date.json
 photos_by_location.json

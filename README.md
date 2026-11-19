@@ -46,7 +46,24 @@ uv run mediasort-geo  <folder>
 
 A [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) is provided for an
 easy-to-rebuild Linux dev environment (Debian + Python 3.12), instead of requiring a
-local Windows install.
+local Windows install. The image also bakes in the latest [actionlint](https://github.com/rhysd/actionlint)
+release for checking GitHub Actions workflows (`actionlint` from the repository root).
+New actionlint releases are picked up automatically on the next **Dev Containers:
+Rebuild Container** — the Dockerfile `ADD`s upstream's install script, whose content
+changes on each release, which invalidates the cached install layer.
+
+On a network with a TLS-intercepting proxy, HTTPS downloads inside the container fail
+certificate verification until the proxy's root CA is trusted. One-time setup: copy the
+CA (PEM, `.crt` extension) into `.devcontainer/` — it is gitignored and baked into the
+image at build time by [.devcontainer/Dockerfile](.devcontainer/Dockerfile):
+
+```
+cp /etc/pki/ca-trust/source/anchors/bluecoat-root.crt .devcontainer/
+```
+
+On networks without TLS interception, skip this; the build works with no `.crt` present.
+After adding or rotating a cert, use **Dev Containers: Rebuild Container** — "Reopen in
+Container" reuses the old image.
 
 ## Building
 
