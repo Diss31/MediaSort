@@ -34,6 +34,20 @@ Since the point is learning: explain *why* each option works the way it does
 Keep explanations concise — this is a project preference, not license to write
 long essays for trivial choices.
 
+## External tools
+
+When a task calls for a tool that is not already available in the environment or
+the project (not installed, not a project dependency — e.g. downloading a linter
+binary, `pip install`/`npm install`-ing something just for a check), tell the user
+before using it:
+- what the tool is, in one or two sentences;
+- why it is needed for the task at hand;
+- how it is obtained and whether anything is left behind (temporary download
+  vs. a change to the project's dependencies or tooling).
+
+Adding a tool to the project permanently (dependency, pre-commit hook, CI step)
+is a tooling choice and falls under the core rule above.
+
 ## Escape hatch
 
 If the user explicitly says something like "you decide" or "just pick one" for
