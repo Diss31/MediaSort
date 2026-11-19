@@ -8,6 +8,9 @@ permissions:
 jobs:
   mediasort_executable:
     runs-on: windows-2025
+    permissions:
+      # Tags and releases count as repository contents, hence write.
+      contents: write
     steps:
       - name: Checkout repo
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -20,8 +23,15 @@ jobs:
       # One executable running every filter; there are no per-filter executables.
       - name: Build mediasort executable
         run: uv run pyinstaller --onefile --name mediasort entrypoints/mediasort_entry.py
-      - name: Upload mediasort executable
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: mediasort_executable
-          path: dist/mediasort.exe
+      # Rolling pre-release: the nightly tag is force-moved to the commit just
+      # built, then the single release attached to it gets its exe swapped.
+      # Users thus always download the newest build from one stable URL.
+      # view || create makes the step idempotent: create only runs the very
+      # first time (or if the release was deleted by hand).
+      - name: Publish rolling release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git push --force origin HEAD:refs/tags/nightly
+          gh release view nightly || gh release create nightly --prerelease --title "Latest build" --notes "Rolling build of the latest main commit."
+          gh release upload nightly dist/mediasort.exe --clobber
