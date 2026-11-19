@@ -51,3 +51,25 @@ python group_photos_by_date.py <root> [-o OUTPUT]
 Scanned: `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`, `.png`, `.gif`, `.bmp`, `.webp`, `.heic`, `.heif`
 
 EXIF-capable (used for `capture_time`): `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`. Everything else scanned falls back to `last_modified`.
+
+### Building a Windows executable
+
+Install the build tool in addition to `requirements.txt`:
+
+```
+pip install -r requirements-dev.txt
+```
+
+Build a single-file `.exe`:
+
+```
+pyinstaller --onefile group_photos_by_date.py
+```
+
+The executable is written to `dist/group_photos_by_date.exe`. The `build/` folder
+and the generated `.spec` file are build artifacts and are gitignored; delete
+them freely and rerun the command above to rebuild.
+
+PyInstaller doesn't cross-compile: the `.exe` only runs on the same OS/architecture
+it was built on. This build was produced on 64-bit Windows 11, so the resulting
+`.exe` only runs on 64-bit Windows.

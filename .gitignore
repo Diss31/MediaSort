@@ -1,1 +1,4 @@
 Filter_scripts/photos_by_date.json
+Filter_scripts/build/
+Filter_scripts/dist/
+Filter_scripts/*.spec
