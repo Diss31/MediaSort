@@ -5,7 +5,7 @@ Files are grouped under "capture_time" when their real EXIF DateTimeOriginal
 is readable. Everything else (no EXIF tag, or a format exifread can't parse
 at all) falls back to "last_modified", grouped by file mtime instead.
 
-See requirements.txt for dependencies.
+Dependencies are declared in the root pyproject.toml.
 """
 
 import argparse

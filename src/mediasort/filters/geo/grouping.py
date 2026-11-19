@@ -8,7 +8,7 @@ numbered, not reverse-geocoded. Everything with no usable GPS falls into
 "no_location" -- unlike capture dates there is no fallback, a photo without GPS
 simply has no location.
 
-See requirements.txt for dependencies.
+Dependencies are declared in the root pyproject.toml.
 """
 
 import argparse

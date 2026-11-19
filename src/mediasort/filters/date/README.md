@@ -2,7 +2,7 @@
 
 Groups photos by date, ahead of sorting them into the final library.
 
-## group_photos_by_date.py
+## mediasort.filters.date
 
 Recursively scans a folder tree for photos and groups them by date.
 
@@ -12,18 +12,17 @@ all, e.g. PNG, HEIC) falls back to `last_modified`, grouped by file mtime instea
 
 ### Requirements
 
-Create a virtual environment and install dependencies from `requirements.txt`:
+Dependencies are declared centrally in the root [`pyproject.toml`](../../../../pyproject.toml),
+not per filter. From the repository root:
 
 ```
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+uv sync
 ```
 
 ### Usage
 
 ```
-python group_photos_by_date.py <root> [-o OUTPUT]
+uv run mediasort-date <root> [-o OUTPUT]
 ```
 
 - `root` — folder to scan recursively for photos.
@@ -54,17 +53,17 @@ EXIF-capable (used for `capture_time`): `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`
 
 ### Building a Windows executable
 
-Install the build tool in addition to `requirements.txt`:
+Install the packaging tool via the `exe` extra, then build a single-file `.exe`
+from the entry point shim:
 
 ```
-pip install -r requirements-dev.txt
+uv sync --extra exe
+uv run pyinstaller --onefile --name group_photos_by_date entrypoints/date_entry.py
 ```
 
-Build a single-file `.exe`:
-
-```
-pyinstaller --onefile group_photos_by_date.py
-```
+Both commands run from the repository root. PyInstaller analyses a script file
+and ignores `[project.scripts]`, which is why it is pointed at the two-line shim
+in [`entrypoints/`](../../../../entrypoints) rather than at the package.
 
 The executable is written to `dist/group_photos_by_date.exe`. The `build/` folder
 and the generated `.spec` file are build artifacts and are gitignored; delete

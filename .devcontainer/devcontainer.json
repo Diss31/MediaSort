@@ -3,7 +3,10 @@
 	// Debian + Python 3.12/pip, git, zsh+Oh My Zsh, non-root "vscode" user w/ sudo, pipx, nvm (no Node installed by default).
 	// See https://github.com/devcontainers/images/tree/main/src/python for full image contents.
 	"image": "mcr.microsoft.com/devcontainers/python:3.12",
-	"postCreateCommand": "pip install -r Filter_scripts/date/requirements.txt -r Filter_scripts/date/requirements-dev.txt -r Filter_scripts/geo/requirements.txt -r Filter_scripts/geo/requirements-dev.txt",
+	// uv is the single dependency toolchain across the devcontainer, the Dockerfiles
+	// and the Windows executable build. src-layout means imports only resolve after
+	// a real install, so `uv sync` has to run before anything else works.
+	"postCreateCommand": "pipx install uv && uv sync --extra exe",
 	"remoteUser": "vscode",
 	// Volume nomme persistant : la couche writable du conteneur est perdue a chaque rebuild,
   // ce qui effacerait l'historique de session VS Code/Copilot sans ce mount.

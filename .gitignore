@@ -1,5 +1,16 @@
-Filter_scripts/date/photos_by_date.json
-Filter_scripts/geo/photos_by_location.json
-Filter_scripts/*/build/
-Filter_scripts/*/dist/
-Filter_scripts/*/*.spec
+# Report files
+photos_by_date.json
+photos_by_location.json
+
+# PyInstaller artifacts (default workpath/distpath at the repo root)
+build/
+dist/
+*.spec
+
+# uv-managed project environment
+.venv/
+
+# Python build/bytecode artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/

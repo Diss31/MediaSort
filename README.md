@@ -8,29 +8,50 @@ by the repo owner rather than picked automatically (see
 
 ## Structure
 
-Scripts that filter/organize photos ahead of sorting into the final library. Each
-folder is standalone and has its own README:
+Filters that process photos ahead of sorting them into the final library. Every
+filter ships both as a standalone executable and as a container image, and keeps
+its own README next to its code:
 
-- [Filter_scripts/date/](Filter_scripts/date/README.md) — groups photos by date.
-- [Filter_scripts/geo/](Filter_scripts/geo/README.md) — groups photos by GPS location.
+- [src/mediasort/filters/date/](src/mediasort/filters/date/README.md) — groups photos by date.
+- [src/mediasort/filters/geo/](src/mediasort/filters/geo/README.md) — groups photos by GPS location.
 
 ## Setup
 
+Dependencies for every filter are declared centrally in [pyproject.toml](pyproject.toml)
+and pinned in the committed `uv.lock`. [uv](https://docs.astral.sh/uv/) is the only
+dependency tool used here:
+
 ```
-python -m venv .venv
-.venv\Scripts\activate
+uv sync
 ```
 
-Each subfolder lists its own dependencies in a `requirements.txt`.
+Then run a filter:
 
-### Devcontainer
+```
+uv run mediasort-date <folder>
+uv run mediasort-geo  <folder>
+```
 
-A [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) is provided for an easy-to-rebuild
-Linux-based dev environment (Debian + Python 3.12), instead of requiring a local Windows install.
+A [.devcontainer/devcontainer.json](.devcontainer/devcontainer.json) is provided for an
+easy-to-rebuild Linux dev environment (Debian + Python 3.12), instead of requiring a
+local Windows install.
 
-This is a local convenience only, and diverges from the final expected result:
-`pyinstaller` run inside the devcontainer produces a Linux ELF binary, not the Windows `.exe`
-the project targets — it only validates that the PyInstaller packaging step itself works.
-The [.github/workflows/exec_build.yml](.github/workflows/exec_build.yml) GitHub Action builds on
-`windows-2025` and is the trusted source for catching any discrepancies between the Linux
-devcontainer build and the actual Windows build.
+## Building
+
+Standalone executables:
+
+```
+uv sync --extra exe
+uv run pyinstaller --onefile --name group_photos_by_date entrypoints/date_entry.py
+```
+
+Container images:
+
+```
+docker build -f docker/base.Dockerfile -t mediasort-base:latest .
+docker build -f docker/date.Dockerfile -t mediasort-date:latest .
+```
+
+See [docs/build.md](docs/build.md) for the full build and packaging setup: how the
+two tracks relate, how dependencies are split between the shared base image and
+each filter, and why it is arranged that way.

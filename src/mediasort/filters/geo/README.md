@@ -2,7 +2,7 @@
 
 Groups photos by GPS location, ahead of sorting them into the final library.
 
-## group_photos_by_location.py
+## mediasort.filters.geo
 
 Recursively scans a folder tree for photos, reads their EXIF GPS coordinates, and
 clusters them by proximity.
@@ -15,24 +15,23 @@ photos along a street can chain into one large cluster.
 Clusters are numbered (`location_1`, `location_2`, …), not named — there is no
 reverse-geocoding, so no network access and no place names.
 
-Unlike `group_photos_by_date.py` there is **no fallback**: capture dates can fall back
+Unlike the [date filter](../date/README.md) there is **no fallback**: capture dates can fall back
 to the file mtime, but a photo without GPS simply has no location and goes to
 `no_location`.
 
 ### Requirements
 
-Create a virtual environment and install dependencies from `requirements.txt`:
+Dependencies are declared centrally in the root [`pyproject.toml`](../../../../pyproject.toml),
+not per filter. From the repository root:
 
 ```
-python -m venv .venv
-.venv\Scripts\activate
-pip install -r requirements.txt
+uv sync
 ```
 
 ### Usage
 
 ```
-python group_photos_by_location.py <root> [-o OUTPUT] [-t THRESHOLD]
+uv run mediasort-geo <root> [-o OUTPUT] [-t THRESHOLD]
 ```
 
 - `root` — folder to scan recursively for photos.
@@ -78,17 +77,17 @@ Photos whose GPS tags are present but unusable — malformed values, or an all-z
 
 ### Building a Windows executable
 
-Install the build tool in addition to `requirements.txt`:
+Install the packaging tool via the `exe` extra, then build a single-file `.exe`
+from the entry point shim:
 
 ```
-pip install -r requirements-dev.txt
+uv sync --extra exe
+uv run pyinstaller --onefile --name group_photos_by_location entrypoints/geo_entry.py
 ```
 
-Build a single-file `.exe`:
-
-```
-pyinstaller --onefile group_photos_by_location.py
-```
+Both commands run from the repository root. PyInstaller analyses a script file
+and ignores `[project.scripts]`, which is why it is pointed at the two-line shim
+in [`entrypoints/`](../../../../entrypoints) rather than at the package.
 
 The executable is written to `dist/group_photos_by_location.exe`. The `build/` folder
 and the generated `.spec` file are build artifacts and are gitignored; delete them

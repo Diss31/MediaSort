@@ -1,0 +1,26 @@
+[project]
+name = "mediasort"
+version = "0.1.0"
+description = "Filters that group a photo library by capture date or GPS location."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["exifread>=3.0"]
+
+# One extra per filter: the per-pod delta on top of the shared dependencies
+# above. Empty today because both filters only need exifread -- they stay
+# declared so the Dockerfiles and build commands do not change shape once a
+# filter grows its own dependency.
+[project.optional-dependencies]
+date = []
+geo = []
+# Named for the distribution channel, not an OS: pyinstaller also runs in the
+# devcontainer to produce the Linux smoke-test binary. Never installed in an image.
+exe = ["pyinstaller>=6.0"]
+
+[project.scripts]
+mediasort-date = "mediasort.filters.date:main"
+mediasort-geo = "mediasort.filters.geo:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
