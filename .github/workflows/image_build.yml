@@ -1,0 +1,121 @@
+name: Container Images' Build
+on:
+  push:
+    branches:
+      - main
+permissions:
+  contents: read
+env:
+  # GHCR only accepts lowercase names; github.repository_owner is "Diss31".
+  REGISTRY: ghcr.io/diss31
+  TAG: sha-${{ github.sha }}
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      # &name defines a YAML anchor, *name reuses it verbatim further down.
+      # GitHub does not support the << merge key, so only identical steps or
+      # single values can be shared.
+      - &checkout
+        name: Checkout repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - &ghcr-login
+        name: Log in to GHCR
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # provenance is disabled so each tag is a single plain manifest: with
+      # attestations, GHCR lists extra untagged versions that the cleanup
+      # workflow could delete, breaking the image that references them.
+      - name: Build and push shared base image
+        uses: &build-push-action-v docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: docker/base.Dockerfile
+          tags: ${{ env.REGISTRY }}/mediasort-base:${{ env.TAG }}
+          # GHCR attributes the push to the workflow token, not to a person, so
+          # whoever triggered the build is recorded in the image itself.
+          labels: &labels |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            io.github.diss31.mediasort.triggered-by=${{ github.actor }}
+          provenance: false
+          push: true
+      # The filter images FROM the base just pushed for this exact commit, so
+      # they can never pick up a base built from another revision.
+      - name: Build and push date filter image
+        uses: *build-push-action-v
+        with:
+          context: .
+          file: docker/date.Dockerfile
+          build-args: BASE_IMAGE=${{ env.REGISTRY }}/mediasort-base:${{ env.TAG }}
+          tags: ${{ env.REGISTRY }}/mediasort-date:${{ env.TAG }}
+          labels: *labels
+          provenance: false
+          push: true
+      - name: Build and push geo filter image
+        uses: *build-push-action-v
+        with:
+          context: .
+          file: docker/geo.Dockerfile
+          build-args: BASE_IMAGE=${{ env.REGISTRY }}/mediasort-base:${{ env.TAG }}
+          tags: ${{ env.REGISTRY }}/mediasort-geo:${{ env.TAG }}
+          labels: *labels
+          provenance: false
+          push: true
+
+  # End-to-end: a fresh runner pulls the pushed images, exactly as a consumer
+  # would, and checks the final product rather than the build internals.
+  test:
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: read
+    strategy:
+      matrix:
+        filter: [date, geo]
+    env:
+      IMAGE: ghcr.io/diss31/mediasort-${{ matrix.filter }}:sha-${{ github.sha }}
+    steps:
+      - *checkout
+      - *ghcr-login
+      - name: Pull image
+        run: docker pull "$IMAGE"
+      - name: Run the filter on the samples
+        run: |
+          mkdir -p "$RUNNER_TEMP/out"
+          docker run --rm \
+            -v "$PWD/tests:/app/tests:ro" \
+            -v "$RUNNER_TEMP/out:/out" \
+            "$IMAGE" tests/samples -o /out/result.json
+          test -s "$RUNNER_TEMP/out/result.json"
+      # pyinstaller belongs to the executable channel only. If it ever appears in
+      # an image, the exe extra has leaked into a Dockerfile.
+      - name: Check pyinstaller did not leak into the image
+        run: |
+          if docker run --rm --entrypoint sh "$IMAGE" -c "uv pip list" | grep -iq pyinstaller; then
+            echo "pyinstaller found in $IMAGE" >&2
+            exit 1
+          fi
+
+  # Re-tags the already-tested digests; nothing is rebuilt. Waits for every
+  # matrix entry, so latest only moves when all filters pass together.
+  promote:
+    needs: test
+    runs-on: ubuntu-24.04
+    permissions:
+      packages: write
+    steps:
+      - *ghcr-login
+      - name: Tag tested images as latest
+        run: |
+          for image in base date geo; do
+            docker buildx imagetools create \
+              -t "$REGISTRY/mediasort-$image:latest" \
+              "$REGISTRY/mediasort-$image:$TAG"
+          done

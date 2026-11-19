@@ -158,9 +158,31 @@ that properly means per-filter package metadata — a separate distribution per
 filter — which is more machinery than two filters justify. Revisit if push times
 start to hurt, or if a filter gains large assets such as model weights.
 
-CI builds these images to prove the Dockerfiles still work, runs each one against
-[tests/samples/](../tests/samples), and discards them. Nothing is pushed to a
-registry yet.
+### CI and the registry
+
+[image_build.yml](../.github/workflows/image_build.yml) publishes to the GitHub
+Container Registry (`ghcr.io/diss31/mediasort-{base,date,geo}`) in three jobs:
+
+| Job | Does | Permission |
+| --- | --- | --- |
+| `build` | builds and pushes all three images tagged `sha-<commit>`; the filter images are built `FROM` the base pushed for that same commit (`BASE_IMAGE` build arg) | `packages: write` |
+| `test` | on a fresh runner, pulls each filter image, runs it against [tests/samples/](../tests/samples) and checks a report was written, then asserts PyInstaller is absent | `packages: read` |
+| `promote` | once every filter passes, re-tags the tested digests as `latest`, without rebuilding | `packages: write` |
+
+`test` is end-to-end on purpose: it exercises the published images exactly as a
+consumer pulls them, not the build internals. The base is not tested on its own;
+it is contained in every filter image that is.
+
+`latest` therefore only ever points at images that passed, and always moves for
+all filters together. A failing commit still leaves its `sha-` images in the
+registry; [ghcr_cleanup.yml](../.github/workflows/ghcr_cleanup.yml) runs weekly
+and keeps the five most recent versions of each package, plus the one tagged
+`latest` whatever its age. If `latest` cannot be resolved, it deletes nothing.
+
+Authentication uses the run's automatic `GITHUB_TOKEN`, whose rights are the
+job's `permissions:` block — no secret to create. New packages start
+**private**; their visibility, and the repository's *Admin* access needed by the
+cleanup workflow, are set from each package's settings page.
 
 ## Devcontainer
 

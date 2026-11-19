@@ -1,0 +1,46 @@
+name: GHCR Cleanup
+on:
+  schedule:
+    # Every Friday at 04:00 Paris time in winter, 05:00 in summer (GitHub cron
+    # is always UTC: 03:00 UTC).
+    - cron: "0 3 * * 5"
+  workflow_dispatch:
+permissions:
+  packages: write
+jobs:
+  cleanup:
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        package: [mediasort-base, mediasort-date, mediasort-geo]
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # ignore-versions matches the version *name*, which for a container is its
+      # digest, not its tags: "latest" would match nothing. So the digest that
+      # latest points to is looked up and excluded explicitly.
+      - name: Find the digest behind latest
+        id: latest
+        run: |
+          if digest=$(docker buildx imagetools inspect \
+              "ghcr.io/diss31/${{ matrix.package }}:latest" \
+              --format '{{ .Manifest.Digest }}'); then
+            echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          else
+            # Fail closed: without a known latest, nothing is deleted.
+            echo "::warning::Could not resolve ${{ matrix.package }}:latest, skipping cleanup."
+          fi
+      # Keeps the 5 most recent versions, and latest whatever its age, even
+      # after many failed builds in a row.
+      - name: Delete old image versions
+        if: steps.latest.outputs.digest != ''
+        uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
+        with:
+          package-name: ${{ matrix.package }}
+          package-type: container
+          min-versions-to-keep: 5
+          ignore-versions: ^${{ steps.latest.outputs.digest }}$
