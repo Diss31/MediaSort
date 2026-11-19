@@ -119,3 +119,14 @@ jobs:
               -t "$REGISTRY/mediasort-$image:latest" \
               "$REGISTRY/mediasort-$image:$TAG"
           done
+
+  # needs guarantees cleanup only runs right after a successful promotion,
+  # which is what lets the reusable workflow keep latest with a plain
+  # min-versions-to-keep (see ghcr_cleanup.yml).
+  cleanup:
+    needs: promote
+    permissions:
+      packages: write
+    uses: ./.github/workflows/ghcr_cleanup.yml
+    with:
+      packages: '["mediasort-base", "mediasort-date", "mediasort-geo"]'

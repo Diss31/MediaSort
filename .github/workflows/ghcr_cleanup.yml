@@ -1,46 +1,34 @@
 name: GHCR Cleanup
+# Reusable workflow: build workflows call it as a final job after promoting
+# latest, so a run here implies latest was just moved and is the newest
+# version of each package. min-versions-to-keep therefore protects it without
+# having to resolve and exclude its digest explicitly.
+#
+# With a single caller today (image_build), being reusable is deliberate
+# over-engineering kept for learning purposes: it only pays off later, once
+# several workflows produce Docker images and each can call this with its own
+# package list instead of duplicating the cleanup logic.
 on:
-  schedule:
-    # Every Friday at 04:00 Paris time in winter, 05:00 in summer (GitHub cron
-    # is always UTC: 03:00 UTC).
-    - cron: "0 3 * * 5"
-  workflow_dispatch:
-permissions:
-  packages: write
+  workflow_call:
+    inputs:
+      packages:
+        description: JSON array of GHCR package names to prune.
+        required: true
+        type: string
 jobs:
   cleanup:
     runs-on: ubuntu-24.04
+    # Callers must grant at least this much; a called workflow can only
+    # downgrade the caller's token, never elevate it.
+    permissions:
+      packages: write
     strategy:
       matrix:
-        package: [mediasort-base, mediasort-date, mediasort-geo]
+        package: ${{ fromJSON(inputs.packages) }}
     steps:
-      - name: Log in to GHCR
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      # ignore-versions matches the version *name*, which for a container is its
-      # digest, not its tags: "latest" would match nothing. So the digest that
-      # latest points to is looked up and excluded explicitly.
-      - name: Find the digest behind latest
-        id: latest
-        run: |
-          if digest=$(docker buildx imagetools inspect \
-              "ghcr.io/diss31/${{ matrix.package }}:latest" \
-              --format '{{ .Manifest.Digest }}'); then
-            echo "digest=$digest" >> "$GITHUB_OUTPUT"
-          else
-            # Fail closed: without a known latest, nothing is deleted.
-            echo "::warning::Could not resolve ${{ matrix.package }}:latest, skipping cleanup."
-          fi
-      # Keeps the 5 most recent versions, and latest whatever its age, even
-      # after many failed builds in a row.
       - name: Delete old image versions
-        if: steps.latest.outputs.digest != ''
         uses: actions/delete-package-versions@e5bc658cc4c965c472efe991f8beea3981499c55 # v5.0.0
         with:
           package-name: ${{ matrix.package }}
           package-type: container
           min-versions-to-keep: 5
-          ignore-versions: ^${{ steps.latest.outputs.digest }}$
