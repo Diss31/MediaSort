@@ -12,21 +12,11 @@ Dependencies are declared in the root pyproject.toml.
 """
 
 import argparse
-import json
 import math
-import os
-import sys
 
-import exifread
-
-# Formats exifread can actually parse EXIF from. HEIC/HEIF support is best-effort.
-GPS_CAPABLE_EXTENSIONS = {
-    ".jpg", ".jpeg", ".jpe", ".tif", ".tiff", ".heic", ".heif",
-}
-
-IMAGE_EXTENSIONS = GPS_CAPABLE_EXTENSIONS | {
-    ".png", ".gif", ".bmp", ".webp",
-}
+from mediasort.common.exif import read_exif_tags
+from mediasort.common.files import find_images
+from mediasort.common.report import write_report
 
 GPS_LATITUDE_TAG = "GPS GPSLatitude"
 GPS_LATITUDE_REF_TAG = "GPS GPSLatitudeRef"
@@ -37,13 +27,6 @@ NEGATIVE_REFS = {"S", "W"}
 
 EARTH_RADIUS_M = 6371008.8
 DEFAULT_THRESHOLD_M = 500.0
-
-
-def find_images(root):
-    for dirpath, _dirnames, filenames in os.walk(root):
-        for name in filenames:
-            if os.path.splitext(name)[1].lower() in IMAGE_EXTENSIONS:
-                yield os.path.join(dirpath, name)
 
 
 def dms_to_decimal(tag, ref):
@@ -67,10 +50,8 @@ def dms_to_decimal(tag, ref):
 
 def read_gps(path):
     """Returns (latitude, longitude) in decimal degrees, or None if unavailable."""
-    try:
-        with open(path, "rb") as f:
-            tags = exifread.process_file(f, details=False)
-    except (OSError, ValueError):
+    tags = read_exif_tags(path)
+    if tags is None:
         return None
 
     try:
@@ -151,8 +132,7 @@ def group_photos(root, threshold_m):
     no_location = []
 
     for path in find_images(root):
-        ext = os.path.splitext(path)[1].lower()
-        coordinates = read_gps(path) if ext in GPS_CAPABLE_EXTENSIONS else None
+        coordinates = read_gps(path)
 
         if coordinates is None:
             no_location.append(path)
@@ -207,12 +187,7 @@ def main():
 
     clusters, no_location = group_photos(args.root, args.threshold)
     report = build_report(clusters, no_location)
-
-    if os.path.exists(args.output):
-        print(f"Warning: {args.output} already exists and will be overwritten.", file=sys.stderr)
-
-    with open(args.output, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2, ensure_ascii=False)
+    write_report(report, args.output)
 
     located_count = sum(len(paths) for paths in clusters)
     print(

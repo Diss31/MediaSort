@@ -2,44 +2,29 @@
 Recursively scans a folder tree for photos and groups them by date.
 
 Files are grouped under "capture_time" when their real EXIF DateTimeOriginal
-is readable. Everything else (no EXIF tag, or a format exifread can't parse
-at all) falls back to "last_modified", grouped by file mtime instead.
+is readable (HEIC/HEIF best-effort). Everything else (no EXIF tag, or a format
+exifread can't parse at all) falls back to "last_modified", grouped by file
+mtime instead.
 
 Dependencies are declared in the root pyproject.toml.
 """
 
 import argparse
-import json
 import os
-import sys
 from datetime import datetime
 
-import exifread
-
-# Formats exifread can actually parse EXIF from.
-EXIF_CAPABLE_EXTENSIONS = {".jpg", ".jpeg", ".jpe", ".tif", ".tiff"}
-
-IMAGE_EXTENSIONS = EXIF_CAPABLE_EXTENSIONS | {
-    ".png", ".gif", ".bmp", ".webp", ".heic", ".heif",
-}
+from mediasort.common.exif import read_exif_tags
+from mediasort.common.files import find_images
+from mediasort.common.report import write_report
 
 EXIF_DATE_TAG = "EXIF DateTimeOriginal"
 EXIF_DATE_FORMAT = "%Y:%m:%d %H:%M:%S"
 
 
-def find_images(root):
-    for dirpath, _dirnames, filenames in os.walk(root):
-        for name in filenames:
-            if os.path.splitext(name)[1].lower() in IMAGE_EXTENSIONS:
-                yield os.path.join(dirpath, name)
-
-
 def read_capture_date(path):
     """Returns a datetime from EXIF DateTimeOriginal, or None if unavailable."""
-    try:
-        with open(path, "rb") as f:
-            tags = exifread.process_file(f, details=False, stop_tag=EXIF_DATE_TAG)
-    except OSError:
+    tags = read_exif_tags(path, stop_tag=EXIF_DATE_TAG)
+    if tags is None:
         return None
 
     raw = tags.get(EXIF_DATE_TAG)
@@ -57,8 +42,7 @@ def group_photos(root):
     last_modified = {}
 
     for path in find_images(root):
-        ext = os.path.splitext(path)[1].lower()
-        capture_date = read_capture_date(path) if ext in EXIF_CAPABLE_EXTENSIONS else None
+        capture_date = read_capture_date(path)
 
         if capture_date is not None:
             key = capture_date.date().isoformat()
@@ -102,12 +86,7 @@ def main():
 
     capture_time, last_modified = group_photos(args.root)
     report = build_report(capture_time, last_modified)
-
-    if os.path.exists(args.output):
-        print(f"Warning: {args.output} already exists and will be overwritten.", file=sys.stderr)
-
-    with open(args.output, "w", encoding="utf-8") as f:
-        json.dump(report, f, indent=2, ensure_ascii=False)
+    write_report(report, args.output)
 
     capture_count = sum(len(paths) for paths in capture_time.values())
     modified_count = sum(len(paths) for paths in last_modified.values())

@@ -7,8 +7,9 @@ Groups photos by date, ahead of sorting them into the final library.
 Recursively scans a folder tree for photos and groups them by date.
 
 Files are grouped under `capture_time` when their real EXIF `DateTimeOriginal`
-is readable. Everything else (no EXIF tag, or a format exifread can't parse at
-all, e.g. PNG, HEIC) falls back to `last_modified`, grouped by file mtime instead.
+is readable. Everything else (no EXIF tag, a format that can't carry EXIF such as
+PNG, or a HEIC/HEIF file exifread fails to parse) falls back to `last_modified`,
+grouped by file mtime instead.
 
 ### Requirements
 
@@ -34,10 +35,10 @@ uv run mediasort-date <root> [-o OUTPUT]
 {
   "capture_time": {
     "2024-06-01": ["path/to/photo1.jpg", "path/to/photo2.jpg"],
-    "2024-06-02": ["path/to/photo3.jpg"]
+    "2024-06-02": ["path/to/photo3.jpg", "path/to/photo4.heic"]
   },
   "last_modified": {
-    "2024-06-03": ["path/to/unknown.jpg", "path/to/photo.heic"]
+    "2024-06-03": ["path/to/unknown.jpg", "path/to/screenshot.png"]
   }
 }
 ```
@@ -49,7 +50,10 @@ uv run mediasort-date <root> [-o OUTPUT]
 
 Scanned: `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`, `.png`, `.gif`, `.bmp`, `.webp`, `.heic`, `.heif`
 
-EXIF-capable (used for `capture_time`): `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`. Everything else scanned falls back to `last_modified`.
+EXIF-capable (used for `capture_time`): `.jpg`, `.jpeg`, `.jpe`, `.tif`, `.tiff`, and best-effort `.heic`, `.heif` — exifread's HEIC parsing does not succeed on every file, and failures fall back to `last_modified`. Everything else scanned falls back to `last_modified`.
+
+These are the same formats the [geo filter](../geo/README.md) probes for GPS: both
+read EXIF through the shared `mediasort.common.exif` reader.
 
 ### Building a Windows executable
 

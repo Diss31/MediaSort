@@ -15,6 +15,11 @@ its own README next to its code:
 - [src/mediasort/filters/date/](src/mediasort/filters/date/README.md) — groups photos by date.
 - [src/mediasort/filters/geo/](src/mediasort/filters/geo/README.md) — groups photos by GPS location.
 
+Plumbing shared by every filter — image discovery, raw EXIF reading, JSON report
+writing — lives in [src/mediasort/common/](src/mediasort/common). It deliberately
+holds no filter-specific meaning: parsing a capture date or a GPS fix stays in
+the filter that owns it.
+
 ## Setup
 
 Dependencies for every filter are declared centrally in [pyproject.toml](pyproject.toml)
