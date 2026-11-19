@@ -71,11 +71,49 @@ Downloaded: 2026-09-02
    License: Site states files are provided free for download/testing purposes.
    No EXIF DateTimeOriginal (exercises the "no_exif" bucket).
 
+10) DSCN0010.jpg, DSCN0021.jpg, DSCN0029.jpg, DSCN0042.jpg
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/jpg/gps/<filename>
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+     (jpg/gps subfolder; per its README.txt, originally sourced from
+     gaia-gis.it/spatialite-2.3.1/resources.html, a GPS-EXIF sample page
+     that is no longer online)
+   License: CC BY-SA 4.0, per exif-py tests/resources/README.rst
+     ("User-contributed images will be released under the
+     Attribution-ShareAlike 4.0 International license.")
+   Camera: Nikon Coolpix P6000. Four consecutive shots from the SAME DAY,
+     useful for testing multiple photos grouped under one date:
+     DSCN0010.jpg -> EXIF DateTimeOriginal 2008:11:01 21:15:07
+     DSCN0021.jpg -> EXIF DateTimeOriginal 2008:11:01 21:15:08
+     DSCN0029.jpg -> EXIF DateTimeOriginal 2008:11:01 21:15:09
+     DSCN0042.jpg -> EXIF DateTimeOriginal 2008:11:01 21:15:11
+
+11) Fujifilm_FinePix_E500.jpg
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/jpg/Fujifilm_FinePix_E500.jpg
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+   License: CC BY-SA 4.0, per exif-py tests/resources/README.rst
+   Contains real EXIF DateTimeOriginal (2008:07:31 16:49:10).
+
+12) Pentax_K10D.jpg
+   Source: https://raw.githubusercontent.com/ianare/exif-py/master/tests/resources/jpg/Pentax_K10D.jpg
+   Origin: exif-py (ExifRead) test suite, https://github.com/ianare/exif-py
+   License: CC BY-SA 4.0, per exif-py tests/resources/README.rst. The
+     embedded EXIF copyright field additionally states "Laitche (This file
+     is in the public domain.)".
+   Contains real EXIF DateTimeOriginal (2008:07:31 15:56:49).
+
 
 Coverage notes
 --------------
 - All 11 extensions from Filter_scripts/README.md are represented:
   .jpg, .jpeg (Canon_40D.jpg IS a .jpg; no separate .jpeg sample included),
   .jpe, .tif/.tiff, .png, .gif, .bmp, .webp, .heic, .heif.
-- Files 1-5 carry real embedded EXIF data (dates for grouping); files 6-9
-  have none, to exercise the no_exif fallback path.
+- Files 1-5 and 10-12 carry real embedded EXIF DateTimeOriginal data (dates
+  for grouping); files 6-9 have none, to exercise the no_exif fallback path.
+- Capture dates present, for reference:
+    2008-03-15  Nikon_D70.jpe
+    2008-05-04  Pentax_K10D.jpg
+    2008-05-30  Canon_40D.jpg
+    2008-07-31  Fujifilm_FinePix_E500.jpg
+    2008-11-01  DSCN0010.jpg, DSCN0021.jpg, DSCN0029.jpg, DSCN0042.jpg
+      (4 photos, same day, different times — good for testing multi-photo
+      grouping under a single date)
