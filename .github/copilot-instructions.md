@@ -40,6 +40,18 @@ project before using it (what it is, why needed, what it leaves behind).
 Repo-specific addition: adding a tool *permanently* (dependency, pre-commit
 hook, CI step) is a tooling choice and falls under the core rule above.
 
+## Commands the owner runs manually
+
+The owner runs these by hand to see and understand failures first-hand.
+Do **not** run them automatically: not after an edit, not as validation, not
+"just to check". This is an exception to the "Formatting/linting" bullet above.
+- `actionlint` (GitHub Actions workflow linting).
+- `uv` setup commands: `uv lock`, `uv sync`, `uv add`/`remove`, `uv venv`, etc.
+
+After changing a workflow or `pyproject.toml`, say which command needs running
+(e.g. "`uv.lock` is out of date, run `uv lock`") and stop there. Run one only
+when explicitly asked.
+
 ## Escape hatch
 
 If the user explicitly says something like "you decide" or "just pick one" for
