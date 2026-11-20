@@ -38,7 +38,7 @@ Both tracks ship **every** filter; they differ in packaging form and grouping:
 
 | | Windows executable | Container images |
 | --- | --- | --- |
-| Artifact | **one** standalone `mediasort.exe` running every filter | one image per filter: `mediasort-date`, `mediasort-geo` |
+| Artifact | **one** standalone `mediasort.exe` running every filter | one image per filter: `mediasort-date`, `mediasort-geo`, plus `mediasort-scheduler` |
 | Purpose | the actual personal tool, on a Windows desktop | the same filters on Kubernetes, one pod per filter |
 | Built by | [exec_build.yml](../.github/workflows/exec_build.yml) on `windows-2025` | [image_build.yml](../.github/workflows/image_build.yml) on Linux |
 | Installs | `uv sync --extra exe` | `uv sync --extra <filter>` |
@@ -56,7 +56,7 @@ script, and one entry in the combined CLI
 | --- | --- |
 | `dependencies` | both tracks; in containers, the shared **base image** layer |
 | `optional-dependencies.date` / `.geo` | both tracks; in containers, the thin per-filter layer |
-| `optional-dependencies.scheduler` | the scheduler only; neither the filter images nor the executable install it |
+| `optional-dependencies.scheduler` | the scheduler only; the filter images and the executable never install it, the scheduler image does |
 | `optional-dependencies.exe` | the executable track only |
 
 **Invariant: PyInstaller never enters a container image.** It is a packaging
@@ -114,12 +114,13 @@ token.
 
 ## Container images
 
-One shared base image plus one thin image per filter:
+One shared base image, one thin image per filter, and one for the scheduler:
 
 ```
 docker build -f docker/base.Dockerfile -t mediasort-base:latest .
 docker build -f docker/date.Dockerfile -t mediasort-date:latest .
 docker build -f docker/geo.Dockerfile  -t mediasort-geo:latest  .
+docker build -f docker/scheduler.Dockerfile -t mediasort-scheduler:latest .
 ```
 
 The base holds the shared dependencies and **no project code**, so editing a
@@ -151,19 +152,20 @@ push times hurt or a filter gains large assets.
 ### CI and the registry
 
 [image_build.yml](../.github/workflows/image_build.yml) publishes to
-`ghcr.io/diss31/mediasort-{base,date,geo}` in four jobs:
+`ghcr.io/diss31/mediasort-{base,date,geo,scheduler}` in five jobs:
 
 | Job | Does | Permission |
 | --- | --- | --- |
-| `build` | builds and pushes all three images tagged `sha-<commit>`; filter images are built `FROM` the base pushed for that same commit (`BASE_IMAGE` arg) | `packages: write` |
+| `build` | builds and pushes all four images tagged `sha-<commit>`; filter and scheduler images are built `FROM` the base pushed for that same commit (`BASE_IMAGE` arg) | `packages: write` |
 | `test` | on a fresh runner, pulls each filter image, runs it against [tests/samples/](../tests/samples), checks a report was written, asserts PyInstaller is absent | `packages: read` |
-| `promote` | once every filter passes, re-tags the tested digests as `latest`, without rebuilding | `packages: write` |
-| `cleanup` | calls [ghcr_cleanup.yml](../.github/workflows/ghcr_cleanup.yml) with the three package names | `packages: write` |
+| `test-scheduler` | runs the date and geo images to produce reports, then runs the scheduler image on them with a YAML config, checks a plan was written, asserts PyInstaller is absent | `packages: read` |
+| `promote` | once every image passes, re-tags the tested digests as `latest`, without rebuilding | `packages: write` |
+| `cleanup` | calls [ghcr_cleanup.yml](../.github/workflows/ghcr_cleanup.yml) with the four package names | `packages: write` |
 
 `test` is end-to-end on purpose: it exercises the published images exactly as a
 consumer pulls them. The base is not tested alone; it is contained in every
-filter image that is. `latest` only ever points at images that passed, and
-moves for all filters together.
+image that is. `latest` only ever points at images that passed, and
+moves for all images together.
 
 The base is pushed rather than kept local to the runner by choice, not
 necessity: `FROM` a registry reference pinned to the exact commit means a

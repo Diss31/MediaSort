@@ -3,8 +3,10 @@
 FROM mcr.microsoft.com/devcontainers/python:3.12
 
 # Docker initializes an empty named volume from this directory's ownership.
-# Keep the VS Code server volume writable by the non-root remote user.
-RUN install -d -o vscode -g vscode /home/vscode/.vscode-server
+# Keep the VS Code server and Copilot volumes writable by the non-root remote user.
+RUN install -d -o vscode -g vscode \
+    /home/vscode/.vscode-server \
+    /home/vscode/.copilot /home/vscode/.copilot/session-state
 
 # A TLS-intercepting proxy (e.g. Bluecoat) re-signs public hosts with its own CA, so
 # without this trust the actionlint download below fails certificate verification.

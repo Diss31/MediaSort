@@ -116,6 +116,7 @@ Container images:
 ```
 docker build -f docker/base.Dockerfile -t mediasort-base:latest .
 docker build -f docker/date.Dockerfile -t mediasort-date:latest .
+docker build -f docker/scheduler.Dockerfile -t mediasort-scheduler:latest .
 ```
 
 See [docs/build.md](docs/build.md) for the full build and packaging setup: how the

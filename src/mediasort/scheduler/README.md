@@ -35,3 +35,16 @@ uv run mediasort-scheduler config.yaml [-o OUTPUT]
 
 The default output is `media_plan.json`. The plan JSON has a `filter_order`
 array and a nested `tree` object; arrays at the leaves contain image paths.
+
+## Container image
+
+The scheduler has its own image, built on the shared base like the filter images
+([scheduler.Dockerfile](../../../docker/scheduler.Dockerfile)). Mount the folder
+holding the config and the filter reports, since report paths are relative to
+the config file:
+
+```sh
+docker build -f docker/base.Dockerfile -t mediasort-base:latest .
+docker build -f docker/scheduler.Dockerfile -t mediasort-scheduler:latest .
+docker run --rm -v "$PWD/work:/work" mediasort-scheduler /work/config.yaml -o /work/media_plan.json
+```
