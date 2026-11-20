@@ -42,16 +42,21 @@ uv run mediasort-geo <root> [-o OUTPUT] [-t THRESHOLD]
 
 ```json
 {
-  "locations": {
-    "location_1": ["path/to/photo1.jpg", "path/to/photo2.jpg"],
-    "location_2": ["path/to/photo3.jpg"]
-  },
-  "no_location": ["path/to/screenshot.png", "path/to/stripped.jpg"]
+  "filter": "geo",
+  "groups": {
+    "locations": {
+      "location_1": ["path/to/photo1.jpg", "path/to/photo2.jpg"],
+      "location_2": ["path/to/photo3.jpg"]
+    },
+    "no_location": ["path/to/screenshot.png", "path/to/stripped.jpg"]
+  }
 }
 ```
 
+- `filter` — identifies the filter that produced this report.
+- `groups` — recursive groups; objects name a group and arrays contain file paths.
 - `locations` — cluster name → sorted list of file paths. Clusters are numbered by photo count, descending (ties broken by first path), so the same input folder always produces the same numbering.
-- `no_location` — sorted list of files with no usable GPS.
+- `no_location` — sorted list of files with no usable GPS. The scheduler places these files under `unknown`.
 
 ### Supported extensions
 

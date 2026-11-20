@@ -1,0 +1,7 @@
+filter_order:
+  - date
+  - geo
+
+reports_location:
+  date: photos_by_date.json
+  geo: photos_by_location.json

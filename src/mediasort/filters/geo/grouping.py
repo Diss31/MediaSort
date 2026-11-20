@@ -153,11 +153,14 @@ def build_report(clusters, no_location):
         key=lambda paths: (-len(paths), paths[0]),
     )
     return {
-        "locations": {
-            f"location_{number}": paths
-            for number, paths in enumerate(sorted_clusters, start=1)
+        "filter": "geo",
+        "groups": {
+            "locations": {
+                f"location_{number}": paths
+                for number, paths in enumerate(sorted_clusters, start=1)
+            },
+            "no_location": sorted(no_location),
         },
-        "no_location": sorted(no_location),
     }
 
 

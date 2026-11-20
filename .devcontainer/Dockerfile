@@ -2,6 +2,10 @@
 # proxy CAs (needed before any in-container HTTPS call) and the actionlint binary.
 FROM mcr.microsoft.com/devcontainers/python:3.12
 
+# Docker initializes an empty named volume from this directory's ownership.
+# Keep the VS Code server volume writable by the non-root remote user.
+RUN install -d -o vscode -g vscode /home/vscode/.vscode-server
+
 # A TLS-intercepting proxy (e.g. Bluecoat) re-signs public hosts with its own CA, so
 # without this trust the actionlint download below fails certificate verification.
 # Certs come from gitignored .devcontainer/*.crt files (see README).

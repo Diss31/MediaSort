@@ -9,11 +9,10 @@
 	// uv is the single dependency toolchain across the devcontainer, the Dockerfiles
 	// and the Windows executable build. src-layout means imports only resolve after
 	// a real install, so `uv sync` has to run before anything else works.
-	"postCreateCommand": "pipx install uv && uv sync --extra exe",
+	"postCreateCommand": "pipx install uv && uv sync --extra exe --extra scheduler",
 	"remoteUser": "vscode",
-	// Volume nomme persistant : la couche writable du conteneur est perdue a chaque rebuild,
-  // ce qui effacerait l'historique de session VS Code/Copilot sans ce mount.
 	"mounts": [
-		"source=zone56-vscode-server-MediaSort,target=/home/vscode/.vscode-server,type=volume"
+		"source=zone56-vscode-server-MediaSort,target=/home/vscode/.vscode-server,type=volume",
+		"source=zone56-copilot-MediaSort,target=/home/vscode/.copilot/session-state,type=volume"
 	]
 }

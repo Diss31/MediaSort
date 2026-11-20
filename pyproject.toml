@@ -13,6 +13,10 @@ dependencies = ["exifread>=3.0"]
 [project.optional-dependencies]
 date = []
 geo = []
+# Not a filter: the scheduler only reads their reports. It is the sole user of
+# the YAML parser, so keeping it out of the shared dependencies means the filter
+# images never carry PyYAML.
+scheduler = ["PyYAML>=6.0"]
 # Named for the distribution channel, not an OS: pyinstaller also runs in the
 # devcontainer to produce the Linux smoke-test binary. Never installed in an image.
 exe = ["pyinstaller>=6.0"]
@@ -21,6 +25,7 @@ exe = ["pyinstaller>=6.0"]
 mediasort = "mediasort.cli:main"
 mediasort-date = "mediasort.filters.date:main"
 mediasort-geo = "mediasort.filters.geo:main"
+mediasort-scheduler = "mediasort.scheduler.cli:main"
 
 [build-system]
 requires = ["setuptools>=68"]

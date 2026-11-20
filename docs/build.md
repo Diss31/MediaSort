@@ -8,8 +8,9 @@ How MediaSort is structured, and why. For day-to-day usage see the
 All dependencies are declared in the root [pyproject.toml](../pyproject.toml)
 and pinned in the committed `uv.lock`. Extras split them per consumer:
 `[project.dependencies]` is the shared set (the container base image), each
-`[project.optional-dependencies]` entry is a per-filter delta, and `exe` is the
-packaging channel.
+`[project.optional-dependencies]` entry is a per-filter delta, `scheduler`
+holds the scheduler's own dependency (the YAML parser, which the filters never
+import), and `exe` is the packaging channel.
 
 A `requirements.txt` per filter was rejected because it cannot express "this
 dependency is shared" — the base image's list would end up duplicated in a
@@ -55,6 +56,7 @@ script, and one entry in the combined CLI
 | --- | --- |
 | `dependencies` | both tracks; in containers, the shared **base image** layer |
 | `optional-dependencies.date` / `.geo` | both tracks; in containers, the thin per-filter layer |
+| `optional-dependencies.scheduler` | the scheduler only; neither the filter images nor the executable install it |
 | `optional-dependencies.exe` | the executable track only |
 
 **Invariant: PyInstaller never enters a container image.** It is a packaging

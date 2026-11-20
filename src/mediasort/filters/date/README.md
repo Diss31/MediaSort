@@ -33,18 +33,23 @@ uv run mediasort-date <root> [-o OUTPUT]
 
 ```json
 {
-  "capture_time": {
-    "2024-06-01": ["path/to/photo1.jpg", "path/to/photo2.jpg"],
-    "2024-06-02": ["path/to/photo3.jpg", "path/to/photo4.heic"]
-  },
-  "last_modified": {
-    "2024-06-03": ["path/to/unknown.jpg", "path/to/screenshot.png"]
+  "filter": "date",
+  "groups": {
+    "capture_time": {
+      "2024-06-01": ["path/to/photo1.jpg", "path/to/photo2.jpg"],
+      "2024-06-02": ["path/to/photo3.jpg", "path/to/photo4.heic"]
+    },
+    "last_modified": {
+      "2024-06-03": ["path/to/unknown.jpg", "path/to/screenshot.png"]
+    }
   }
 }
 ```
 
+- `filter` — identifies the filter that produced this report.
+- `groups` — recursive groups; objects name a group and arrays contain file paths.
 - `capture_time` — capture date (`YYYY-MM-DD`) → sorted list of file paths, from EXIF `DateTimeOriginal`.
-- `last_modified` — mtime date (`YYYY-MM-DD`) → list of file paths ordered by mtime within each day, for files with no readable EXIF date or an unsupported format.
+- `last_modified` — mtime date (`YYYY-MM-DD`) → list of file paths ordered by mtime within each day, for files with no readable EXIF date or an unsupported format. The scheduler places these files under `unknown`.
 
 ### Supported extensions
 

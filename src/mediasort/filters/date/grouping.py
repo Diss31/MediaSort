@@ -62,12 +62,15 @@ def group_photos(root):
 
 def build_report(capture_time, last_modified):
     return {
-        "capture_time": {
-            date: sorted(paths) for date, paths in sorted(capture_time.items())
-        },
-        "last_modified": {
-            date: [path for path, _mtime in entries]
-            for date, entries in sorted(last_modified.items())
+        "filter": "date",
+        "groups": {
+            "capture_time": {
+                date: sorted(paths) for date, paths in sorted(capture_time.items())
+            },
+            "last_modified": {
+                date: [path for path, _mtime in entries]
+                for date, entries in sorted(last_modified.items())
+            },
         },
     }
 
